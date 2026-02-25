@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberTips — Sistema de Concientización</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050A0F;
+    --surface: #0D1620;
+    --surface2: #111E2E;
+    --border: #1C3050;
+    --accent: #00E5FF;
+    --accent2: #FF6B35;
+    --accent3: #7BFF7B;
+    --text: #C8D8E8;
+    --text-dim: #5A7A9A;
+    --danger: #FF3B5C;
+    --yellow: #FFD700;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  /* GRID BACKGROUND */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(5,10,15,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2rem;
+    height: 60px;
+  }
+  .logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 1rem;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .logo span { color: var(--text-dim); }
+  .nav-tabs { display: flex; gap: 0; }
+  .tab-btn {
+    background: none; border: none; cursor: pointer;
+    padding: 0 1.2rem;
+    height: 60px;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    border-bottom: 2px solid transparent;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* MAIN */
+  main { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 2rem; }
+
+  /* PANELS */
+  .panel { display: none; animation: fadeIn 0.3s ease; }
+  .panel.active { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: none; } }
+
+  /* SECTION HEADER */
+  .section-header {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    margin-bottom: 2rem;
+  }
+  .section-title { font-size: 2rem; font-weight: 800; line-height: 1.1; }
+  .section-title span { color: var(--accent); }
+  .section-sub { font-size: 0.85rem; color: var(--text-dim); margin-top: 0.4rem; font-family: 'Space Mono', monospace; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    transition: border-color 0.2s;
+  }
+  .card:hover { border-color: rgba(0,229,255,0.3); }
+
+  /* TIP COMPOSER */
+  .tip-grid { display: grid; grid-template-columns: 1fr 400px; gap: 1.5rem; }
+  label { display: block; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 0.5rem; }
+  input, textarea, select {
+    width: 100%; background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 0.9rem;
+    padding: 0.6rem 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 90px; }
+  select option { background: var(--surface); }
+  .form-group { margin-bottom: 1rem; }
+
+  /* CATEGORY BADGES */
+  .badges { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+  .badge {
+    padding: 0.3rem 0.8rem;
+    border-radius: 100px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    border: 1px solid;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+  .badge.phishing { border-color: var(--accent2); color: var(--accent2); }
+  .badge.phishing.active { background: var(--accent2); color: #000; }
+  .badge.passwords { border-color: var(--accent); color: var(--accent); }
+  .badge.passwords.active { background: var(--accent); color: #000; }
+  .badge.malware { border-color: var(--danger); color: var(--danger); }
+  .badge.malware.active { background: var(--danger); color: #fff; }
+  .badge.redes { border-color: var(--accent3); color: var(--accent3); }
+  .badge.redes.active { background: var(--accent3); color: #000; }
+  .badge.datos { border-color: var(--yellow); color: var(--yellow); }
+  .badge.datos.active { background: var(--yellow); color: #000; }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.65rem 1.4rem;
+    border-radius: 6px;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+  }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:hover { background: #00c8e0; transform: translateY(-1px); }
+  .btn-secondary { background: var(--surface2); border: 1px solid var(--border); color: var(--text); }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-sm { padding: 0.4rem 0.9rem; font-size: 0.72rem; }
+  .btn-row { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem; }
+
+  /* EMAIL PREVIEW */
+  .email-preview {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    font-size: 0.85rem;
+  }
+  .email-topbar {
+    background: var(--surface2);
+    padding: 0.7rem 1rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+  }
+  .email-body { padding: 1.2rem; }
+  .email-subject { font-weight: 700; font-size: 1rem; margin-bottom: 0.5rem; color: var(--accent); }
+  .email-tip-box {
+    background: linear-gradient(135deg, rgba(0,229,255,0.08), rgba(0,229,255,0.02));
+    border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    padding: 1rem;
+    margin: 0.8rem 0;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+  .email-survey-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem;
+    margin-top: 0.8rem;
+  }
+  .survey-q { font-weight: 700; font-size: 0.85rem; margin-bottom: 0.6rem; }
+  .survey-options { display: flex; flex-direction: column; gap: 0.4rem; }
+  .survey-opt {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.4rem 0.7rem;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.15s;
+  }
+  .survey-opt:hover { border-color: var(--accent); }
+  .survey-opt input { width: auto; }
+
+  /* TIP LIST */
+  .tip-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    transition: all 0.2s;
+  }
+  .tip-item:hover { border-color: rgba(0,229,255,0.3); }
+  .tip-icon { font-size: 1.5rem; flex-shrink: 0; width: 40px; text-align: center; }
+  .tip-info { flex: 1; }
+  .tip-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.2rem; }
+  .tip-meta { font-size: 0.75rem; color: var(--text-dim); font-family: 'Space Mono', monospace; }
+  .tip-actions { display: flex; gap: 0.5rem; }
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .status-dot.sent { background: var(--accent3); box-shadow: 0 0 6px var(--accent3); }
+  .status-dot.scheduled { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); }
+  .status-dot.draft { background: var(--text-dim); }
+
+  /* STATS */
+  .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; margin-bottom: 2rem; }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.2rem;
+    text-align: center;
+  }
+  .stat-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+  .stat-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); margin-top: 0.3rem; }
+  .stat-card.good .stat-num { color: var(--accent3); }
+  .stat-card.blue .stat-num { color: var(--accent); }
+  .stat-card.orange .stat-num { color: var(--accent2); }
+  .stat-card.yellow .stat-num { color: var(--yellow); }
+
+  /* SURVEY RESULTS */
+  .survey-results-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  .sr-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  .sr-title { font-weight: 700; font-size: 0.95rem; }
+  .sr-date { font-size: 0.72rem; color: var(--text-dim); font-family: 'Space Mono', monospace; }
+  .bar-row { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.6rem; }
+  .bar-label { font-size: 0.78rem; min-width: 180px; color: var(--text-dim); }
+  .bar-track { flex: 1; height: 8px; background: var(--bg); border-radius: 100px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 100px; transition: width 1s ease; }
+  .bar-pct { font-family: 'Space Mono', monospace; font-size: 0.75rem; min-width: 36px; text-align: right; }
+
+  /* IMPACT SCORE */
+  .impact-big {
+    display: flex; align-items: center; gap: 1.5rem;
+    padding: 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+  }
+  .impact-ring {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: conic-gradient(var(--accent3) 0% 73%, var(--surface2) 73%);
+    display: flex; align-items: center; justify-content: center;
+    position: relative; flex-shrink: 0;
+  }
+  .impact-ring::after {
+    content: '';
+    position: absolute;
+    width: 62px; height: 62px;
+    border-radius: 50%;
+    background: var(--surface);
+  }
+  .impact-ring span {
+    position: relative; z-index: 1;
+    font-family: 'Space Mono', monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent3);
+  }
+  .impact-detail { flex: 1; }
+  .impact-title { font-weight: 700; margin-bottom: 0.4rem; }
+  .impact-meta { font-size: 0.8rem; color: var(--text-dim); line-height: 1.6; }
+
+  /* SCHEDULE SECTION */
+  .schedule-row {
+    display: grid; grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 1rem; align-items: end;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.2rem;
+    margin-bottom: 0.8rem;
+  }
+  .freq-toggle { display: flex; gap: 0; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .freq-opt { 
+    flex: 1; padding: 0.5rem; background: none; border: none;
+    cursor: pointer; font-family: 'Syne', sans-serif; font-size: 0.75rem;
+    font-weight: 700; color: var(--text-dim); text-transform: uppercase;
+    letter-spacing: 0.05em; transition: all 0.15s;
+  }
+  .freq-opt.active { background: var(--accent); color: #000; }
+
+  /* AUDIENCE TAGS */
+  .audience-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+  .audience-tag {
+    padding: 0.25rem 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-size: 0.7rem;
+    font-family: 'Space Mono', monospace;
+    color: var(--text-dim);
+    display: flex; align-items: center; gap: 0.3rem;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .audience-tag.active { border-color: var(--accent); color: var(--accent); background: rgba(0,229,255,0.06); }
+  .audience-tag .remove { color: var(--danger); font-weight: 700; }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 2rem; right: 2rem;
+    background: var(--accent3);
+    color: #000;
+    padding: 0.8rem 1.4rem;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    z-index: 999;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+  }
+  .toast.show { transform: none; opacity: 1; }
+
+  /* PROGRESS BAR ANIMATED */
+  @keyframes barAnim {
+    from { width: 0; }
+  }
+  .bar-fill { animation: barAnim 1.2s ease forwards; }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    z-index: 200; display: none; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 520px;
+    width: 90%;
+    animation: fadeIn 0.25s ease;
+  }
+  .modal-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 1.5rem; }
+  .modal-title span { color: var(--accent); }
+
+  /* Divider */
+  .divider { height: 1px; background: var(--border); margin: 1.5rem 0; }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .tip-grid { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: repeat(2,1fr); }
+    .schedule-row { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 600px) {
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    main { padding: 1rem; }
+    .section-title { font-size: 1.4rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">⬡ <span>CYBER</span>TIPS</div>
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="showPanel('composer')">✏️ Crear</button>
+    <button class="tab-btn" onclick="showPanel('tips')">📋 Tips</button>
+    <button class="tab-btn" onclick="showPanel('schedule')">📅 Programa</button>
+    <button class="tab-btn" onclick="showPanel('impact')">📊 Impacto</button>
+  </div>
+</nav>
+
+<main>
+
+<!-- PANEL: COMPOSER -->
+<div id="panel-composer" class="panel active">
+  <div class="section-header">
+    <div>
+      <div class="section-title">Crear <span>Tip</span></div>
+      <div class="section-sub">// redactar + encuesta + vista previa</div>
+    </div>
+  </div>
+
+  <div class="tip-grid">
+    <!-- FORM -->
+    <div>
+      <div class="card">
+        <div class="form-group">
+          <label>Categoría</label>
+          <div class="badges">
+            <span class="badge phishing active" onclick="toggleBadge(this)">🎣 Phishing</span>
+            <span class="badge passwords" onclick="toggleBadge(this)">🔑 Contraseñas</span>
+            <span class="badge malware" onclick="toggleBadge(this)">🦠 Malware</span>
+            <span class="badge redes" onclick="toggleBadge(this)">📡 Redes</span>
+            <span class="badge datos" onclick="toggleBadge(this)">🗂 Datos</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Asunto del correo</label>
+          <input id="email-subject" type="text" value="🔐 Tip de la semana: Identifica correos de phishing" oninput="updatePreview()">
+        </div>
+        <div class="form-group">
+          <label>Título del tip</label>
+          <input id="tip-title" type="text" value="Cómo detectar un correo de phishing" oninput="updatePreview()">
+        </div>
+        <div class="form-group">
+          <label>Contenido del tip</label>
+          <textarea id="tip-body" oninput="updatePreview()">Los correos de phishing imitan remitentes legítimos para robarte información. Antes de hacer clic en cualquier enlace: verifica el dominio real del remitente, busca errores ortográficos, desconfía de urgencia exagerada y nunca ingreses contraseñas desde un link de correo.</textarea>
+        </div>
+        <div class="divider"></div>
+        <div class="form-group">
+          <label>Pregunta de la encuesta</label>
+          <input id="survey-q" type="text" value="¿Qué tan seguro te sientes identificando phishing?" oninput="updatePreview()">
+        </div>
+        <div class="form-group">
+          <label>Opciones de respuesta (una por línea)</label>
+          <textarea id="survey-opts" rows="4" oninput="updatePreview()">Muy seguro, ya lo identifico bien
+Algo seguro, pero me falta práctica
+Poco seguro, necesito más ejemplos
+No sabía qué era el phishing</textarea>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="saveTip()">💾 Guardar tip</button>
+          <button class="btn btn-secondary" onclick="simulateSend()">📧 Simular envío</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PREVIEW -->
+    <div>
+      <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:0.7rem;">Vista previa del correo</div>
+      <div class="email-preview">
+        <div class="email-topbar">
+          De: <strong>seguridad@empresa.com</strong><br>
+          Para: equipo@empresa.com<br>
+          Asunto: <span id="prev-subject">🔐 Tip de la semana: Identifica correos de phishing</span>
+        </div>
+        <div class="email-body">
+          <div class="email-subject" id="prev-title">Cómo detectar un correo de phishing</div>
+          <div style="font-size:0.78rem;color:var(--text-dim);margin-bottom:0.8rem;">Hola equipo 👋 — Tip de ciberseguridad semanal</div>
+          <div class="email-tip-box" id="prev-body">Los correos de phishing imitan remitentes legítimos para robarte información...</div>
+          <div class="email-survey-box">
+            <div class="survey-q" id="prev-sq">¿Qué tan seguro te sientes identificando phishing?</div>
+            <div class="survey-options" id="prev-sopts">
+              <label class="survey-opt"><input type="radio" name="psurvey"> Muy seguro, ya lo identifico bien</label>
+              <label class="survey-opt"><input type="radio" name="psurvey"> Algo seguro, pero me falta práctica</label>
+              <label class="survey-opt"><input type="radio" name="psurvey"> Poco seguro, necesito más ejemplos</label>
+              <label class="survey-opt"><input type="radio" name="psurvey"> No sabía qué era el phishing</label>
+            </div>
+          </div>
+          <div style="font-size:0.72rem;color:var(--text-dim);margin-top:1rem;font-family:'Space Mono',monospace;">Esta encuesta toma 10 segundos ⚡</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL: TIPS -->
+<div id="panel-tips" class="panel">
+  <div class="section-header">
+    <div>
+      <div class="section-title">Biblioteca de <span>Tips</span></div>
+      <div class="section-sub">// gestiona y envía tu contenido</div>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="showPanel('composer')">+ Nuevo tip</button>
+  </div>
+  <div id="tips-list"></div>
+</div>
+
+<!-- PANEL: SCHEDULE -->
+<div id="panel-schedule" class="panel">
+  <div class="section-header">
+    <div>
+      <div class="section-title">Programa de <span>Envíos</span></div>
+      <div class="section-sub">// automatiza la frecuencia y audiencia</div>
+    </div>
+  </div>
+  <div class="card">
+    <label>Frecuencia de envío</label>
+    <div class="freq-toggle" style="max-width:360px;margin-bottom:1.5rem;">
+      <button class="freq-opt" onclick="setFreq(this,'diario')">Diario</button>
+      <button class="freq-opt active" onclick="setFreq(this,'semanal')">Semanal</button>
+      <button class="freq-opt" onclick="setFreq(this,'quincenal')">Quincenal</button>
+      <button class="freq-opt" onclick="setFreq(this,'mensual')">Mensual</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+      <div class="form-group">
+        <label>Día de envío</label>
+        <select>
+          <option>Lunes</option><option>Martes</option><option>Miércoles</option>
+          <option>Jueves</option><option>Viernes</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Hora de envío</label>
+        <input type="time" value="09:00">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Remitente</label>
+      <input type="email" value="seguridad@empresa.com">
+    </div>
+    <div class="form-group">
+      <label>Audiencia</label>
+      <div class="audience-list">
+        <span class="audience-tag active" onclick="this.classList.toggle('active')">👥 Todo el equipo</span>
+        <span class="audience-tag active" onclick="this.classList.toggle('active')">💻 TI</span>
+        <span class="audience-tag" onclick="this.classList.toggle('active')">💼 Ventas</span>
+        <span class="audience-tag" onclick="this.classList.toggle('active')">📊 Finanzas</span>
+        <span class="audience-tag" onclick="this.classList.toggle('active')">🏢 Gerencia</span>
+        <span class="audience-tag" onclick="this.classList.toggle('active')">⚙️ Operaciones</span>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <label style="margin-bottom:1rem;">Próximos envíos programados</label>
+    <div id="upcoming-list"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveSchedule()">💾 Guardar configuración</button>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL: IMPACT -->
+<div id="panel-impact" class="panel">
+  <div class="section-header">
+    <div>
+      <div class="section-title">Dashboard de <span>Impacto</span></div>
+      <div class="section-sub">// métricas de apertura, respuesta y conocimiento</div>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card blue">
+      <div class="stat-num" id="stat-sent">0</div>
+      <div class="stat-label">Tips enviados</div>
+    </div>
+    <div class="stat-card good">
+      <div class="stat-num" id="stat-open">0%</div>
+      <div class="stat-label">Tasa apertura</div>
+    </div>
+    <div class="stat-card orange">
+      <div class="stat-num" id="stat-survey">0%</div>
+      <div class="stat-label">Resp. encuesta</div>
+    </div>
+    <div class="stat-card yellow">
+      <div class="stat-num" id="stat-impact">0</div>
+      <div class="stat-label">Score impacto</div>
+    </div>
+  </div>
+
+  <div id="impact-cards"></div>
+</div>
+
+</main>
+
+<!-- MODAL SEND -->
+<div class="modal-overlay" id="send-modal">
+  <div class="modal">
+    <div class="modal-title">📧 Simulando <span>envío</span></div>
+    <div id="modal-log" style="font-family:'Space Mono',monospace;font-size:0.78rem;color:var(--text-dim);line-height:2;"></div>
+    <div class="btn-row" style="margin-top:1.5rem;">
+      <button class="btn btn-primary" onclick="closeModal()">✓ Listo</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===================== STATE =====================
+let tips = JSON.parse(localStorage.getItem('cybertips') || '[]');
+let stats = JSON.parse(localStorage.getItem('cyberstats') || '{"sent":0,"opens":[],"surveys":[]}');
+
+// Pre-populate with demo data if empty
+if (tips.length === 0) {
+  tips = [
+    { id: 1, title: "Cómo detectar phishing", subject: "🔐 Tip: Identifica phishing", body: "Los correos de phishing imitan remitentes legítimos...", category: "phishing", surveyQ: "¿Qué tan seguro te sientes identificando phishing?", surveyOpts: ["Muy seguro","Algo seguro","Poco seguro","No sabía qué era"], status: "sent", date: "2025-01-13", responses: [65,20,10,5], opens: 82 },
+    { id: 2, title: "Contraseñas seguras con MFA", subject: "🔑 Tip: Activa el doble factor", body: "El MFA bloquea el 99.9% de ataques automatizados...", category: "passwords", surveyQ: "¿Ya tienes MFA activado en tus cuentas principales?", surveyOpts: ["Sí en todas","En algunas","En ninguna","No sé qué es"], status: "sent", date: "2025-01-06", responses: [45,30,15,10], opens: 76 },
+    { id: 3, title: "Redes Wi-Fi públicas: riesgos", subject: "📡 Tip: Cuidado con Wi-Fi público", body: "En redes públicas tu tráfico puede ser interceptado...", category: "redes", surveyQ: "¿Usas VPN cuando te conectas a Wi-Fi público?", surveyOpts: ["Siempre","A veces","Nunca","No sé qué es VPN"], status: "scheduled", date: "2025-01-20", responses: [], opens: 0 },
+  ];
+  localStorage.setItem('cybertips', JSON.stringify(tips));
+}
+
+if (stats.sent === 0) {
+  stats = { sent: 2, opens: [82, 76], surveys: [100, 90] };
+  localStorage.setItem('cyberstats', JSON.stringify(stats));
+}
+
+// ===================== PREVIEW =====================
+function updatePreview() {
+  document.getElementById('prev-subject').textContent = document.getElementById('email-subject').value;
+  document.getElementById('prev-title').textContent = document.getElementById('tip-title').value;
+  document.getElementById('prev-body').textContent = document.getElementById('tip-body').value;
+  document.getElementById('prev-sq').textContent = document.getElementById('survey-q').value;
+  const opts = document.getElementById('survey-opts').value.split('\n').filter(o => o.trim());
+  const container = document.getElementById('prev-sopts');
+  container.innerHTML = opts.map(o => `<label class="survey-opt"><input type="radio" name="psurvey"> ${o.trim()}</label>`).join('');
+}
+
+function toggleBadge(el) {
+  el.classList.toggle('active');
+}
+
+// ===================== SAVE TIP =====================
+function saveTip() {
+  const opts = document.getElementById('survey-opts').value.split('\n').filter(o => o.trim());
+  const cat = document.querySelector('.badge.active')?.className.split(' ')[1] || 'general';
+  const tip = {
+    id: Date.now(),
+    title: document.getElementById('tip-title').value,
+    subject: document.getElementById('email-subject').value,
+    body: document.getElementById('tip-body').value,
+    category: cat,
+    surveyQ: document.getElementById('survey-q').value,
+    surveyOpts: opts,
+    status: 'draft',
+    date: new Date().toISOString().split('T')[0],
+    responses: [],
+    opens: 0
+  };
+  tips.push(tip);
+  localStorage.setItem('cybertips', JSON.stringify(tips));
+  showToast('✅ Tip guardado en la biblioteca');
+  renderTips();
+}
+
+// ===================== TIPS LIST =====================
+const catIcons = { phishing:'🎣', passwords:'🔑', malware:'🦠', redes:'📡', datos:'🗂', general:'🛡' };
+function renderTips() {
+  const list = document.getElementById('tips-list');
+  list.innerHTML = tips.map(t => `
+    <div class="tip-item">
+      <div class="tip-icon">${catIcons[t.category]||'🛡'}</div>
+      <div class="tip-info">
+        <div class="tip-name">${t.title}</div>
+        <div class="tip-meta">${t.date} · ${t.category} · ${t.opens>0?t.opens+'% apertura':'Sin envíos'} · ${t.responses.length?'Encuesta activa':'Sin respuestas'}</div>
+      </div>
+      <div class="status-dot ${t.status}"></div>
+      <div class="tip-actions">
+        ${t.status==='draft'?`<button class="btn btn-secondary btn-sm" onclick="sendTip(${t.id})">📧 Enviar</button>`:''}
+        <button class="btn btn-secondary btn-sm" onclick="deleteTip(${t.id})">🗑</button>
+      </div>
+    </div>
+  `).join('') || '<div style="color:var(--text-dim);text-align:center;padding:3rem;font-size:0.85rem;">No hay tips aún — crea uno en la pestaña Crear</div>';
+}
+
+function deleteTip(id) {
+  tips = tips.filter(t => t.id !== id);
+  localStorage.setItem('cybertips', JSON.stringify(tips));
+  renderTips();
+  showToast('🗑 Tip eliminado');
+}
+
+function sendTip(id) {
+  const t = tips.find(x => x.id === id);
+  if (!t) return;
+  t.status = 'sent';
+  t.opens = Math.floor(Math.random()*30)+60;
+  t.responses = t.surveyOpts.map((_,i) => [45,30,15,10][i]||5);
+  localStorage.setItem('cybertips', JSON.stringify(tips));
+  stats.sent++;
+  stats.opens.push(t.opens);
+  stats.surveys.push(Math.floor(Math.random()*20)+75);
+  localStorage.setItem('cyberstats', JSON.stringify(stats));
+  simulateSend();
+  renderTips();
+  renderImpact();
+}
+
+// ===================== SIMULATE SEND =====================
+function simulateSend() {
+  document.getElementById('send-modal').classList.add('open');
+  const log = document.getElementById('modal-log');
+  const lines = [
+    '> Conectando con servidor SMTP...',
+    '> Autenticando credenciales...',
+    '> Compilando lista de destinatarios (47 usuarios)...',
+    '> Adjuntando encuesta al cuerpo del correo...',
+    '> Generando pixel de seguimiento único...',
+    '> Enviando correos... [███████████] 100%',
+    '> ✓ 47/47 correos entregados exitosamente',
+    '> ✓ Seguimiento de apertura activado',
+    '> ✓ Encuesta lista para respuestas',
+  ];
+  log.innerHTML = '';
+  let i = 0;
+  const interval = setInterval(() => {
+    if (i < lines.length) {
+      log.innerHTML += lines[i] + '<br>';
+      i++;
+    } else {
+      clearInterval(interval);
+    }
+  }, 300);
+}
+
+function closeModal() {
+  document.getElementById('send-modal').classList.remove('open');
+  showToast('📧 47 correos enviados con éxito');
+}
+
+// ===================== SCHEDULE =====================
+function setFreq(btn, freq) {
+  document.querySelectorAll('.freq-opt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function saveSchedule() {
+  showToast('📅 Programa guardado correctamente');
+}
+
+function renderUpcoming() {
+  const dates = ['Lun 20 Ene', 'Lun 27 Ene', 'Lun 03 Feb', 'Lun 10 Feb'];
+  const tipsPool = tips.filter(t=>t.status==='draft');
+  const list = document.getElementById('upcoming-list');
+  list.innerHTML = dates.map((d,i) => `
+    <div style="display:flex;align-items:center;gap:1rem;padding:0.8rem 0;border-bottom:1px solid var(--border);">
+      <div style="font-family:'Space Mono',monospace;font-size:0.78rem;color:var(--accent);min-width:110px;">${d}</div>
+      <div style="font-size:0.85rem;flex:1;">${tipsPool[i]?tipsPool[i].title:`Tip #${i+1} (pendiente de asignar)`}</div>
+      <div style="font-size:0.72rem;color:var(--text-dim);">09:00 AM</div>
+      <button class="btn btn-secondary btn-sm">Editar</button>
+    </div>
+  `).join('');
+}
+
+// ===================== IMPACT =====================
+function renderImpact() {
+  const sent = stats.sent || tips.filter(t=>t.status==='sent').length;
+  const avgOpen = stats.opens.length ? Math.round(stats.opens.reduce((a,b)=>a+b,0)/stats.opens.length) : 0;
+  const avgSurvey = stats.surveys.length ? Math.round(stats.surveys.reduce((a,b)=>a+b,0)/stats.surveys.length) : 0;
+  const score = Math.round((avgOpen * 0.4 + avgSurvey * 0.6));
+
+  // Animate stats
+  animNum('stat-sent', sent);
+  animNum('stat-open', avgOpen, '%');
+  animNum('stat-survey', avgSurvey, '%');
+  animNum('stat-impact', score);
+
+  // Impact cards
+  const sentTips = tips.filter(t => t.status === 'sent');
+  const container = document.getElementById('impact-cards');
+  container.innerHTML = sentTips.map(t => {
+    const total = t.responses.reduce((a,b)=>a+b,0)||1;
+    const imp = Math.round(t.opens * 0.4 + (t.responses.length?80:0) * 0.6);
+    const pct = Math.round(imp);
+    const bars = [
+      {label:'Apertura del correo', val: t.opens, color: 'var(--accent)'},
+      {label:'Completaron encuesta', val: Math.round(t.opens * 0.9), color: 'var(--accent3)'},
+      {label:'Conocimiento previo (alto)', val: Math.round(t.responses[0]*100/total), color: 'var(--accent2)'},
+      {label:'Necesitan más información', val: Math.round((t.responses[2]||0)+(t.responses[3]||0))*100/total, color: 'var(--yellow)'},
+    ];
+    return `
+      <div class="survey-results-card">
+        <div class="sr-header">
+          <div>
+            <div class="sr-title">${catIcons[t.category]} ${t.title}</div>
+            <div class="sr-date">${t.date} · ${t.opens}% apertura · Encuesta: ${t.surveyQ.substring(0,50)}...</div>
+          </div>
+          <div class="impact-big" style="padding:0.7rem 1rem;margin:0;min-width:120px;justify-content:center;flex-direction:column;gap:0.2rem;text-align:center;">
+            <div style="font-family:'Space Mono',monospace;font-size:1.3rem;font-weight:700;color:${pct>70?'var(--accent3)':pct>50?'var(--yellow)':'var(--danger)'};">${pct}</div>
+            <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);">Score impacto</div>
+          </div>
+        </div>
+        ${bars.map(b => `
+          <div class="bar-row">
+            <div class="bar-label">${b.label}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${b.val}%;background:${b.color};"></div></div>
+            <div class="bar-pct" style="color:${b.color};">${Math.round(b.val)}%</div>
+          </div>
+        `).join('')}
+        <div class="divider" style="margin:1rem 0;"></div>
+        <div style="font-size:0.8rem;color:var(--text-dim);">
+          <strong style="color:var(--text);">Respuestas encuesta: </strong>
+          ${t.surveyOpts.map((opt,i) => {
+            const v = t.responses[i]||0;
+            return `<span style="margin-right:1rem;">${opt}: <strong style="color:var(--text);">${v}%</strong></span>`;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }).join('') || '<div style="color:var(--text-dim);text-align:center;padding:3rem;font-size:0.85rem;">Aún no hay tips enviados — envía uno para ver métricas de impacto</div>';
+}
+
+function animNum(id, target, suffix='') {
+  const el = document.getElementById(id);
+  let current = 0;
+  const step = target / 30;
+  const interval = setInterval(() => {
+    current = Math.min(current + step, target);
+    el.textContent = Math.round(current) + suffix;
+    if (current >= target) clearInterval(interval);
+  }, 30);
+}
+
+// ===================== PANELS =====================
+function showPanel(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  const btns = document.querySelectorAll('.tab-btn');
+  const idx = ['composer','tips','schedule','impact'].indexOf(name);
+  if (btns[idx]) btns[idx].classList.add('active');
+  if (name === 'tips') renderTips();
+  if (name === 'impact') renderImpact();
+  if (name === 'schedule') renderUpcoming();
+}
+
+// ===================== TOAST =====================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Init
+renderTips();
+</script>
+</body>
+</html>
